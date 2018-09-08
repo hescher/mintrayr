@@ -44,7 +44,7 @@
     <groupbox>
       <caption label="&mintrayr.prefs.clickbehavior;"/>
       <checkbox preference="dblclickrestore" label="&mintrayr.prefs.dblclickrestore;"/>
-      <checkbox preference="showcontext" label="&mintrayr.prefs.showcontext;"/>
+      <!--<checkbox preference="showcontext" label="&mintrayr.prefs.showcontext;"/>-->
     </groupbox>
 
     <groupbox>
