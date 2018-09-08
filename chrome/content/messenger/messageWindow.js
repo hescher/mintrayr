@@ -8,7 +8,7 @@ addEventListener(
   function() {
     removeEventListener("load", arguments.callee, true);
 
-    Components.utils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
+    ChromeUtils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
     gMinTrayr = new gMinTrayR.MinTrayR(
       document.getElementById("MinTrayR_context"),
       'messenger.watchreader',

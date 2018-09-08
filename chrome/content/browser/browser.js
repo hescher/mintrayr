@@ -15,7 +15,7 @@ addEventListener(
       return;
     }
 
-    Components.utils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
+    ChromeUtils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
     gMinTrayR = new gMinTrayR.MinTrayR($('MinTrayR_context'), 'browser.watchbrowser', function() {
       this.cloneToMenu('MinTrayR_sep-top', ['menu_newNavigator'], false);
       this.cloneToMenu('MinTrayR_sep-bottom', ['menu_closeWindow', 'menu_FileQuitItem'], true);

@@ -4,10 +4,10 @@
 
 var EXPORTED_SYMBOLS = ['MinTrayR'];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://mintrayr/trayservice.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://mintrayr/trayservice.jsm");
 
 function showPopup(menu, x, y) {
   var hDocument = Services.appShell.hiddenDOMWindow.document;
@@ -260,4 +260,4 @@ MinTrayR.prototype = {
     TrayService.unwatchMinimize(window);
   }
 };
-Cu.import('resource://mintrayr/preferences.jsm', MinTrayR.prototype.prefs);
+ChromeUtils.import('resource://mintrayr/preferences.jsm', MinTrayR.prototype.prefs);
