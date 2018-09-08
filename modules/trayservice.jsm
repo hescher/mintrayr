@@ -103,7 +103,7 @@ try {
 }
 catch (ex) {
   // XPCOMABI yielded wrong results; try alternative libraries
-  for (let [,l] in Iterator(_libraries)) {
+  for (let [,l] of Object.entries(_libraries)) {
     try {
       [traylib, char_ptr_t] = loadLibrary(l);
     }
@@ -209,7 +209,7 @@ function ptrcmp(p1, p2) {
 const mouseevent_callback = mouseevent_callback_t(function mouseevent_callback(handle, event) {
   try {
     event = event.contents;
-    for (let [,w] in Iterator(_icons)) {
+    for (let [,w] of Object.entries(_icons)) {
       if (!ptrcmp(w.handle, handle)) {
         continue;
       }
@@ -251,7 +251,7 @@ const mouseevent_callback = mouseevent_callback_t(function mouseevent_callback(h
 
 const minimize_callback = minimize_callback_t(function minimize_callback(handle, type) {
   try {
-    for (let [,w] in Iterator(_watchedWindows)) {
+    for (let [,w] of Object.entries(_watchedWindows)) {
       if (ptrcmp(w.handle, handle)) {
         if (!type) {
           TrayService.minimize(w.window, true);
@@ -380,7 +380,7 @@ TrayIcon.prototype = {
 
 var TrayService = {
   getIcon: function(window) {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       if (icon.window === window) {
         return icon;
       }
@@ -397,7 +397,7 @@ var TrayService = {
     return icon;
   },
   restoreAll: function() {
-    for (let [,icon] in Iterator(_icons.slice(0))) {
+    for (let [,icon] of Object.entries(_icons.slice(0))) {
       icon.restore();
     }
   },
@@ -409,7 +409,7 @@ var TrayService = {
     _watchedWindows.push(ww);
   },
   unwatchMinimize: function(window) {
-    for (let [i,w] in Iterator(_watchedWindows)) {
+    for (let [i,w] of Object.entries(_watchedWindows)) {
       if (w.window === window) {
         try {
           w.destroy();
@@ -422,7 +422,7 @@ var TrayService = {
     }
   },
   isWatchedWindow: function(window) {
-    for (let [i,w] in Iterator(_watchedWindows)) {
+    for (let [i,w] of Object.entries(_watchedWindows)) {
       if (w.window === window) {
         return true;
       }
@@ -433,7 +433,7 @@ var TrayService = {
     return this.createIcon(window, aCloseOnRestore).minimize();
   },
   restore: function(window) {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       if (icon.window === window) {
         icon.restore();
         return;
@@ -457,12 +457,12 @@ var TrayService = {
     catch (ex) {}
   },
   _shutdown: function() {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       icon.close();
     }
     _icons.length = 0;
 
-    for (let [,w] in Iterator(_watchedWindows)) {
+    for (let [,w] of Object.entries(_watchedWindows)) {
       w.destroy();
     }
     _watchedWindows.length = 0;
