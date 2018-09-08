@@ -10,6 +10,7 @@
     <em:targetPlatform>Linux_x86-gcc3</em:targetPlatform>
     <em:targetPlatform>Linux_x86_64-gcc3</em:targetPlatform>
 
+    <!-- Front End MetaData -->
     <em:name>MinimizeToTray revived (MinTrayR)</em:name>
     <em:description>Minimizes windows into the system tray</em:description>
     <em:creator>Nils Maier</em:creator>
@@ -19,6 +20,7 @@
     <em:contributor>helix400</em:contributor>
     <em:contributor>Christoph Grimmer</em:contributor>
 
+    <!-- Front End Integration Hooks (used by Extension Manager)-->
     <em:homepageURL>https://tn123.org/mintrayr/</em:homepageURL>
     <em:optionsURL>chrome://mintrayr/content/prefs/prefs.xul</em:optionsURL>
 
@@ -27,7 +29,7 @@
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
         <em:minVersion>31.0</em:minVersion>
-        <em:maxVersion>50.*</em:maxVersion>
+        <em:maxVersion>57.*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -36,7 +38,7 @@
       <Description>
         <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
         <em:minVersion>31.0</em:minVersion>
-        <em:maxVersion>50.*</em:maxVersion>
+        <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
@@ -45,7 +47,7 @@
       <Description>
         <em:id>{92650c4d-4b8e-4d2a-b7eb-24ecf4f6b63a}</em:id>
         <em:minVersion>2.29</em:minVersion>
-        <em:maxVersion>2.47.*</em:maxVersion>
+        <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
 
