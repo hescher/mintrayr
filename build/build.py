@@ -5,7 +5,7 @@ from io import BytesIO
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED
 
 try:
-    from path import path
+    from path import Path as path
 except ImportError:
     print "Install path.py (via pip)"
     sys.exit(1)
