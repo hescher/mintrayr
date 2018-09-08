@@ -25,7 +25,6 @@ const EXT = 'extensions.mintrayr.';
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const nsIPrefBranch = Ci.nsIPrefBranch;
-const nsIPrefBranch2 = Ci.nsIPrefBranch2;
 
 const PREF_STRING = nsIPrefBranch.PREF_STRING;
 const PREF_INT = nsIPrefBranch.PREF_INT;
@@ -157,11 +156,11 @@ function resetAllExt() {
 
 function addObserver(branch, obj) {
   makeObserver(obj);
-  prefs.QueryInterface(nsIPrefBranch2).addObserver(branch, obj, true);
+  prefs.QueryInterface(nsIPrefBranch).addObserver(branch, obj, true);
 }
 
 function removeObserver(branch, obj) {
-  prefs.QueryInterface(nsIPrefBranch2).removeObserver(branch, obj);
+  prefs.QueryInterface(nsIPrefBranch).removeObserver(branch, obj);
 }
 
 /**
