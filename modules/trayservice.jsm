@@ -33,12 +33,54 @@ XPCOMUtils.defineLazyServiceGetter(
   );
 
 const _directory = (function() {
-  let u = Services.io.newURI(Components.stack.filename, null, null);
-  u = Services.io.newURI(Services.res.resolveURI(u), null, null);
-  if (u instanceof Ci.nsIFileURL) {
-    return u.file.parent.parent;
-  }
-  throw new Error("not resolved");
+// nsIFile
+// https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIFile
+// spec: "resource://mintrayr/trayservice.jsm"
+// filePath:"/trayservice.jsm"
+let uri = Services.io.newURI(Components.stack.filename, null, null);
+// jar:file:///home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi!/modules/trayservice.jsm
+uri = Services.res.resolveURI(uri);
+// 11: remove 'jar:file://'
+let without_prefix = uri.substring(11, uri.length);
+// Get only the uri of the xpi
+// Array [ "/home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi", "/modules/trayservice.jsm" ]
+let path = without_prefix.split('!');
+// Get future path where to put native libraries: remove '.xpi'
+// /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx/
+let folderPath = path[0].substring(0, path[0].length-4) + '/';
+
+var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+
+// Init the directory
+libFolder.initWithPath(folderPath);
+try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);}
+catch(e){}
+
+// Open the addon and extract the libraries to the directory
+var addonFile = new FileUtils.File(path[0]);
+// console.log(addonFile);
+zipReader.open(addonFile);
+// Get only lib files
+var contentEnumerator = zipReader.findEntries("lib/*");
+while (contentEnumerator.hasMore()) {
+    let fullPath = libFolder.clone();
+    var entryName = contentEnumerator.getNext();
+    // console.log(entryName);
+    // Get filename
+    var entryPath = entryName.split('/');
+    let length = entryPath.length;
+    if (length != 0 && entryPath[length-1] != "") {
+        // Forge full path for extracted file, and extract it
+        fullPath.append(entryPath[length-1]);
+        console.log("lib full path", fullPath);
+        zipReader.extract(entryName, fullPath);
+    }
+}
+zipReader.close();
+
+// Return the directory
+return libFolder;
 })();
 
 const _libraries = {
@@ -48,9 +90,10 @@ const _libraries = {
   "x86_64-gcc3": {m:"tray_x86_64-gcc3.so",c:ctypes.char.ptr}
 };
 function loadLibrary({m,c}) {
+  // console.log("DLL name:", m);
   let resource = _directory.clone();
-  resource.append("lib");
   resource.append(m);
+  console.log("DLL full path:", resource);
   if (!resource.exists()) {
     throw new Error("XPCOMABI Library: " + resource.path)
   }
@@ -100,9 +143,12 @@ var traylib;
 var char_ptr_t;
 try {
   // Try to load the library according to XPCOMABI
+  console.log("XPCOMABI:", Services.appinfo.XPCOMABI);
+  // Linux: x86_64-gcc3
   [traylib, char_ptr_t] = loadLibrary(_libraries[Services.appinfo.XPCOMABI]);
 }
 catch (ex) {
+  console.log(ex);
   // XPCOMABI yielded wrong results; try alternative libraries
   for (let [,l] of Object.entries(_libraries)) {
     try {
@@ -110,6 +156,7 @@ catch (ex) {
     }
     catch (ex) {
       // no op
+      //console.log(ex);
     }
   }
   if (!traylib) {
