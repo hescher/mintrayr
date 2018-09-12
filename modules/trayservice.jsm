@@ -85,8 +85,9 @@ const _directory = (function() {
         if (length != 0 && entryPath[length-1] != "") {
             // Forge full path for extracted file, and extract it
             fullPath.append(entryPath[length-1]);
-            console.log("lib full path", fullPath);
-            zipReader.extract(entryName, fullPath);
+            if (!fullPath.exists()) {
+                zipReader.extract(entryName, fullPath);
+            }
         }
     }
     zipReader.close();
