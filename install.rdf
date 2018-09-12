@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
-    <em:id>mintrayr@tn123.ath.cx</em:id>
-    <em:version>1.3.2+tb52fix</em:version>
+    <em:id>mintray-reanimated@ysard</em:id>
+    <em:version>1.4.0</em:version>
     <em:unpack>true</em:unpack>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
     <em:targetPlatform>WINNT_x86-msvc</em:targetPlatform>
@@ -20,6 +20,8 @@
     <em:contributor>helix400</em:contributor>
     <em:contributor>Christoph Grimmer</em:contributor>
     <em:contributor>rsjtdrjgfuzkfg</em:contributor>
+    <em:contributor>Ysard</em:contributor>
+
 
     <!-- Front End Integration Hooks (used by Extension Manager)-->
     <em:homepageURL>https://tn123.org/mintrayr/</em:homepageURL>
