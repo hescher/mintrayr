@@ -7,7 +7,7 @@ from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED
 try:
     from path import Path as path
 except ImportError:
-    print "Install path.py (via pip)"
+    print "Install path.py (pip install -r python_requirements.txt)"
     sys.exit(1)
 
 try:
