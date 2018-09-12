@@ -12,7 +12,9 @@ ChromeUtils.import("resource://mintrayr/trayservice.jsm");
 function showPopup(menu, x, y) {
   var hDocument = Services.appShell.hiddenDOMWindow.document;
   var frame = hDocument.createElement("iframe");
+
   frame.addEventListener("load", function frameload() {
+
     function redispatch(evt) {
       let node = evt.originalTarget;
       node = menu.ownerDocument.getElementById(node.id);
@@ -31,18 +33,22 @@ function showPopup(menu, x, y) {
       evt.stopPropagation();
       return;
     }
+
     frame.removeEventListener("load", frameload, true);
     var window = frame.contentWindow;
     var document = window.document;
-    var clonedMenu = menu.cloneNode(true);
+    var clonedMenu = menu.cloneNode(true); // deep copy
     document.importNode(clonedMenu);
     document.documentElement.appendChild(clonedMenu);
+
     clonedMenu.addEventListener("popuphidden", function hidden() {
       frame.parentNode.removeChild(frame);
       clonedMenu.removeEventListener("popuphidden", hidden, false);
     }, false);
     clonedMenu.addEventListener("command", redispatch, true);
     clonedMenu.addEventListener("click", redispatch, true);
+
+    /*
     clonedMenu.showPopup(
       document.documentElement,
       x,
@@ -51,6 +57,18 @@ function showPopup(menu, x, y) {
       "",
       "bottomleft"
     );
+    */
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/menupopup#m-showPopup
+    // showPopup( element, x, y, popupType, anchor, align ) Deprecated since Gecko 1.9
+    // openPopup( anchor , position , x , y , isContextMenu, attributesOverride, triggerEvent )
+    menu.openPopup(
+        null,
+        "bottomleft",
+        x, y,
+        true,
+        false
+    );
+
   }, true);
 
   var localS = '<?xml version="1.0"?>\
