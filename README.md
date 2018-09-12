@@ -1,5 +1,10 @@
-# mintrayr
-Mozilla extension: Minimize windows into the system tray (Firefox, Thunderbird, Seamonkey, Instantbird)
+# MinimizeToTray Reanimated
+
+MinimizeToTray Reanimated is an application mainly dedicated to Thunderbird to allow its minimization in the systray in one click.
+It is the update of MinimizeToTray Revived, which is not maintained anymore since the recent versions of Thunderbird.
+
+MinimizeToTray Reanimated (this one) on AMO: [link](https://addons.thunderbird.net/en-US/thunderbird/addon/minimizetotray-reanimated/).
+MinimizeToTray Revived (the old one) on AMO: [link](https://addons.thunderbird.net/fr/thunderbird/addon/minimizetotray-revived/reviews/).
 
 # Developing the extension
 
