@@ -52,7 +52,11 @@ function showPopup(menu, x, y) {
       "bottomleft"
     );
   }, true);
-  frame.setAttribute("src", "chrome://mintrayr/content/hidden.xul");
+
+  var localS = '<?xml version="1.0"?>\
+    <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"></window>';
+  frame.src = "data:text/html;charset=utf-8," + escape(localS);
+  //frame.setAttribute("src", "chrome://mintrayr/content/hidden.xul");
   hDocument.documentElement.appendChild(frame);
 }
 
