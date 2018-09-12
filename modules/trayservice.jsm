@@ -59,7 +59,7 @@ const _directory = (function() {
     // Get future path where to put native libraries: remove '.xpi'
     // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx
     // /C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx
-    let folderPath = path[0].substring(0, path[0].length-4);
+    let folderPath = originalPath.substring(0, originalPath.length-4);
 
     var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
