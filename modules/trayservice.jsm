@@ -48,6 +48,7 @@ const _directory = (function() {
     // filePath:"/trayservice.jsm"
     let uri = Services.io.newURI(Components.stack.filename, null, null);
     // jar:file:///home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi!/modules/trayservice.jsm
+    // jar:file:///C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi!/modules/trayservice.jsm
     uri = Services.res.resolveURI(uri);
     // 11: remove 'jar:file://'
     let without_prefix = uri.substring(11, uri.length);
@@ -56,9 +57,9 @@ const _directory = (function() {
     let path = without_prefix.split('!');
     var originalPath = fixPath(path[0]);
     // Get future path where to put native libraries: remove '.xpi'
-    // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx/
-    let folderPath = path[0].substring(0, path[0].length-4) + '/';
-    folderPath = fixPath(folderPath);
+    // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx
+    // /C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx
+    let folderPath = path[0].substring(0, path[0].length-4);
 
     var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
