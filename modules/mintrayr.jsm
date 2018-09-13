@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ['MinTrayR'];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://mintrayr/trayservice.jsm");
@@ -224,7 +224,7 @@ MinTrayR.prototype = {
         rv.push(node);
       }
       catch (ex) {
-        Cu.reportError("Failed to clone " + id);
+        ChromeUtils.reportError("Failed to clone " + id);
       }
     }
     return rv;
@@ -243,7 +243,7 @@ MinTrayR.prototype = {
       return [node];
     }
     catch (ex) {
-      Cu.reportError("Failed to create node");
+      ChromeUtils.reportError("Failed to create node");
     }
     return [];
   },
@@ -274,7 +274,7 @@ MinTrayR.prototype = {
         }
       }
       catch (ex) {
-        Cu.reportError(ex);
+        ChromeUtils.reportError(ex);
       }
       return;
     }
