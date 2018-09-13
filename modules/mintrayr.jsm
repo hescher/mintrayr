@@ -4,7 +4,7 @@
 
 var EXPORTED_SYMBOLS = ['MinTrayR'];
 
-const {classes: Cc, interfaces: Ci} = Components;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://mintrayr/trayservice.jsm");
@@ -167,6 +167,10 @@ MinTrayR.prototype = {
       this._icon.close();
     }
   },
+  get icon() {
+    this._ensureIcon();
+    return this._icon;
+  },
   minimize: function MinTrayR_minimize() {
     this.icon.minimize();
   },
@@ -175,6 +179,9 @@ MinTrayR.prototype = {
     if (icon && !icon.isClosed) {
       icon.restore();
     }
+  },
+  get isWatched() {
+      return this._watched;
   },
   watch: function MinTrayR_watch() {
     if (!this._watched) {
