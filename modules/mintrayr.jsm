@@ -61,13 +61,15 @@ function showPopup(menu, x, y) {
     // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/menupopup#m-showPopup
     // showPopup( element, x, y, popupType, anchor, align ) Deprecated since Gecko 1.9
     // openPopup( anchor , position , x , y , isContextMenu, attributesOverride, triggerEvent )
-    menu.openPopup(
+    /*menu.openPopup(
         null,
         "bottomleft",
         x, y,
         true,
         false
-    );
+    );*/
+    // Try better positioning of the menu
+    menu.openPopupAtScreen(x, y, true);
 
   }, true);
 
