@@ -88,7 +88,10 @@ def build(basedir, outfile):
                 zp.writestr(ZipOutInfo("chrome.manifest"), manifest)
 
         print "writing xpi"
-        with open(outfile, "wb") as op:
+        outputdir = basedir + "dist/"
+        if not os.path.exists(outputdir):
+            os.makedirs(outputdir)
+        with open(outputdir + outfile, "wb") as op:
             op.write(xpi.read())
     print "done!"
     return 0
