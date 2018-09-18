@@ -33,8 +33,15 @@ XPCOMUtils.defineLazyServiceGetter(
   );
 
 function fixPath(path) {
+    // Handle URIs with spaces encoded with '%20'
+    try {
+        path = decodeURIComponent(path);
+    } catch (e) {
+        console.log("mintrayr: decodeURIComponent failed on: ", path);
+    }
+
     // fix path for windows
-    if (/^\/[A-Z]:\//.test(path)) { // detect if this is broken windows path
+    if (/^\/[A-Z]:\//.test(path)) { // detect if this is broken windows path: '\C:\xxx'
         path = path.substring(1, path.length); // remove leading slash
         path = path.replace(/\//g, '\\'); // also convert slash to backslash
     }
@@ -56,10 +63,13 @@ const _directory = (function() {
     // Array [ "/home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi", "/modules/trayservice.jsm" ]
     let path = without_prefix.split('!');
     var originalPath = fixPath(path[0]);
+    console.log("mintrayr - extension path: ", originalPath);
     // Get future path where to put native libraries: remove '.xpi'
     // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx
     // /C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx
-    let folderPath = originalPath.substring(0, originalPath.length-4);
+    //let folderPath = originalPath.substring(0, originalPath.length-4);
+    let folderPath = originalPath.replace('.xpi', '');
+    console.log("mintrayr - extraction path: ", folderPath);
 
     var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
@@ -67,7 +77,10 @@ const _directory = (function() {
     // Init the directory
     libFolder.initWithPath(folderPath);
     try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);}
-    catch(e){}
+    catch(e){
+        if (e.name != 'NS_ERROR_FILE_ALREADY_EXISTS')
+            console.log("mintrayr - create extraction dir error: ", e);
+    }
 
     // Open the addon and extract the libraries to the directory
     var addonFile = new FileUtils.File(originalPath);
@@ -106,9 +119,8 @@ function loadLibrary({m,c}) {
   // console.log("DLL name:", m);
   let resource = _directory.clone();
   resource.append(m);
-  console.log("DLL full path:", resource);
   if (!resource.exists()) {
-    throw new Error("XPCOMABI Library: " + resource.path)
+    throw new Error("mintrayr - XPCOMABI Library not found: " + resource.path)
   }
   return [ctypes.open(resource.path), c];
 }
@@ -156,12 +168,11 @@ var traylib;
 var char_ptr_t;
 try {
   // Try to load the library according to XPCOMABI
-  console.log("XPCOMABI:", Services.appinfo.XPCOMABI);
   // Linux: x86_64-gcc3
   [traylib, char_ptr_t] = loadLibrary(_libraries[Services.appinfo.XPCOMABI]);
 }
 catch (ex) {
-  console.log(ex);
+  console.log("mintrayr - XPCOMABI:", Services.appinfo.XPCOMABI, "DLL error:", ex);
   // XPCOMABI yielded wrong results; try alternative libraries
   for (let [,l] of Object.entries(_libraries)) {
     try {
