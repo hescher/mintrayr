@@ -58,6 +58,15 @@ addEventListener(
               // must be in sync with the original command
               return window.minimize();
           }
+          function MinTrayRKeyDown(event) {
+            // metakey => MacOS (command), Windows
+            if (event.metaKey) {
+                // Y key
+                if (event.which == 89) {
+                    MinTrayRTryMinimizeWindow(event);
+                }
+            }
+          }
 
           function hijackButton(newCommand, id) {
             let button = $(id);
@@ -76,6 +85,7 @@ addEventListener(
           ['titlebar-close'].forEach(hijackButton.bind(null, MinTrayRTryCloseWindow));
           ['titlebar-min'].forEach(hijackButton.bind(null, MinTrayRTryMinimizeWindow));
           window.addEventListener("close", MinTrayRTryCloseWindow);
+          window.addEventListener("keydown", MinTrayRKeyDown);
         })(this);
 
         this.cloneToMenu('MinTrayR_sep-top', [menu_NewPopup_id, "button-getAllNewMsg", "addressBook"], false);
