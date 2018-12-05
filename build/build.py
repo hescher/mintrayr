@@ -7,18 +7,18 @@ from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED
 try:
     from path import Path as path
 except ImportError:
-    print "Install path.py (pip install -r python_requirements.txt)"
+    print("Install path.py (pip install -r python_requirements.txt)")
     sys.exit(1)
 
 try:
-    from cmp_listed_locales import cmp_listed_locales
-except ImportError, ex:
+    from .cmp_listed_locales import cmp_listed_locales
+except ImportError as ex:
     from warnings import warn
     warn("cannot compare locales ({})".format(ex))
     def cmp_listed_locales(dirname):
         pass
 
-from context import ZipFileMinorCompression
+from .context import ZipFileMinorCompression
 
 class ZipOutFile(ZipFile):
     def __init__(self, zfile, method=None):
@@ -63,7 +63,7 @@ def build(basedir, outfile):
     jar_files = (path(__file__).dirname() / "jar.files").lines(retain=False)
     xpi_files = (path(__file__).dirname() / "xpi.files").lines(retain=False)
 
-    print "verifying locales"
+    print("verifying locales")
     try:
         cmp_listed_locales(basedir)
     except:
@@ -71,27 +71,27 @@ def build(basedir, outfile):
 
     with ZipFileMinorCompression(), BytesIO() as xpi:
         with ZipOutFile(xpi, method=ZIP_DEFLATED) as zp:
-            print "zipping regular files"
+            print("zipping regular files")
             zip_files(zp, xpi_files, basedir)
 
-            print "creating inner jar"
+            print("creating inner jar")
             with BytesIO() as jar:
                 with ZipOutFile(jar) as jp:
                     zip_files(jp, jar_files, basedir / "chrome/")
                 zp.writestr(ZipOutInfo("chrome.jar"), jar.read())
 
-            print "writing manifest"
+            print("writing manifest")
             with open("chrome.manifest") as mf:
                 manifest = "\n".join((chromejar_line(l.strip())
                                       for l in mf.readlines()
                                       ))
                 zp.writestr(ZipOutInfo("chrome.manifest"), manifest)
 
-        print "writing xpi"
+        print("writing xpi")
         outputdir = basedir + "dist/"
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
         with open(outputdir + outfile, "wb") as op:
             op.write(xpi.read())
-    print "done!"
+    print("done!")
     return 0
