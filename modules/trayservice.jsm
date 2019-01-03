@@ -41,7 +41,9 @@ function fixPath(path) {
     }
 
     // fix path for windows
-    if (/^\/[A-Z]:\//.test(path)) { // detect if this is broken windows path: '\C:\xxx'
+    // detect if this is broken windows path: '\C:\xxx'
+    // or a network path: '\\network\drive\'
+    if (/^\/[A-Z]:\//.test(path) || /^\/{3}/.test(path)) {
         path = path.substring(1, path.length); // remove leading slash
         path = path.replace(/\//g, '\\'); // also convert slash to backslash
     }
