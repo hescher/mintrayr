@@ -409,11 +409,20 @@ TrayIcon.prototype = {
     _MinimizeWindow(this._handle);
     this._minimized = true;
   },
-  restore: function() {
+  restore: function(origin_call) {
     if (this._closed) {
       return;
     }
     if (!this._minimized) {
+        if (origin_call === undefined) {
+            // console.log("Call from trayicon only");
+            // If TrayIcon is clicked, restore() is triggered without argument
+            // also, restore() is called with the name of the calling function.
+            // we do that distinction because when the TrayIcon is created/TB launched,
+            // minimize_callback is triggered automatically. So it triggers unwanted minimization.
+            // Minimize this window
+            this.minimize();
+        }
       return;
     }
     if (this.closeOnRestore) {
@@ -465,7 +474,7 @@ var TrayService = {
   },
   restoreAll: function() {
     for (let [,icon] of Object.entries(_icons.slice(0))) {
-      icon.restore();
+      icon.restore("TrayService::restoreAll");
     }
   },
   watchMinimize: function(window) {
@@ -502,7 +511,7 @@ var TrayService = {
   restore: function(window) {
     for (let [,icon] of Object.entries(_icons)) {
       if (icon.window === window) {
-        icon.restore();
+        icon.restore("TrayService::restore");
         return;
       }
     }
