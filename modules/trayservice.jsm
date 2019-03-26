@@ -78,7 +78,7 @@ const _directory = (function() {
 
     // Init the directory
     libFolder.initWithPath(folderPath);
-    try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);}
+    try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o755);}
     catch(e){
         if (e.name != 'NS_ERROR_FILE_ALREADY_EXISTS')
             console.log("mintrayr - create extraction dir error: ", e);
