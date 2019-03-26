@@ -16,7 +16,7 @@
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="MinTrayR_keyset">
-    <key id="MinTrayR_minimize_key" modifiers="&mintrayr.keys.minimize.modifiers;" keycode="&mintrayr.keys.minimize.keycode;" oncommand="gMinTrayR.minimize();"/>
+    <key id="MinTrayR_minimize_key" modifiers="&mintrayr.keys.minimize.modifiers;" key="&mintrayr.keys.minimize.key;" oncommand="gMinTrayR.minimize();"/>
   </keyset>
 
   <menupopup id="MinTrayR_context">
