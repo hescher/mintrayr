@@ -66,16 +66,23 @@ const _directory = (function() {
     let path = without_prefix.split('!');
     var originalPath = fixPath(path[0]);
     console.log("mintrayr - extension path: ", originalPath);
+    // Get future path where to put native libraries: remove '.xpi'
+    // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx
+    // /C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx
+    //let folderPath = originalPath.substring(0, originalPath.length-4);
+    let folderPath = originalPath.replace('.xpi', '');
+    console.log("mintrayr - extraction path: ", folderPath);
 
-    // Init the directory in another folder than extension folder
-    // -> allows decompression in a folder not monitored by the XPIInstall service
-    // that on some configurations instantly deletes the content of any folder
-    // created by the addon in the profile 'extensions' folder (See #7)
-    // -> This folder will not be deleted during the uninstall process of the addon; DO NOT TRY THIS AT HOME
-    let libFolder = FileUtils.getDir("ProfD", ["mintrayr_data_DO_NOT_TRY_THIS_AT_HOME"], true);
-    console.log("mintrayr - extraction path: ", libFolder.path);
-
+    var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
     var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+
+    // Init the directory
+    libFolder.initWithPath(folderPath);
+    try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o777);}
+    catch(e){
+        if (e.name != 'NS_ERROR_FILE_ALREADY_EXISTS')
+            console.log("mintrayr - create extraction dir error: ", e);
+    }
 
     // Open the addon and extract the libraries to the directory
     var addonFile = new FileUtils.File(originalPath);
