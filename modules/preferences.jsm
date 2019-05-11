@@ -25,7 +25,6 @@ const EXT = 'extensions.mintrayr.';
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const nsIPrefBranch = Ci.nsIPrefBranch;
-const nsIPrefBranch2 = Ci.nsIPrefBranch2;
 
 const PREF_STRING = nsIPrefBranch.PREF_STRING;
 const PREF_INT = nsIPrefBranch.PREF_INT;
@@ -80,7 +79,7 @@ function setExt(key, value){
 
 function getMultiByte(key, defaultValue){
   try {
-    return prefs.getComplexValue(key, Ci.nsISupportsString).data;
+    return prefs.getStringPref(key);
   }
   catch (ex) {
     // no-op
@@ -91,7 +90,7 @@ function getMultiByte(key, defaultValue){
 function setMultiByte(key, value) {
   let str = new SupportsString();
   str.data = value.toString();
-  prefs.setComplexValue(key, Ci.nsISupportsString, str);
+  prefs.setStringPref(key, str);
 }
 
 function hasUserValue(key) {
@@ -157,11 +156,11 @@ function resetAllExt() {
 
 function addObserver(branch, obj) {
   makeObserver(obj);
-  prefs.QueryInterface(nsIPrefBranch2).addObserver(branch, obj, true);
+  prefs.QueryInterface(nsIPrefBranch).addObserver(branch, obj, true);
 }
 
 function removeObserver(branch, obj) {
-  prefs.QueryInterface(nsIPrefBranch2).removeObserver(branch, obj);
+  prefs.QueryInterface(nsIPrefBranch).removeObserver(branch, obj);
 }
 
 /**

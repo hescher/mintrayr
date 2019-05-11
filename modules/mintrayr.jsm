@@ -4,15 +4,17 @@
 
 var EXPORTED_SYMBOLS = ['MinTrayR'];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://mintrayr/trayservice.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://mintrayr/trayservice.jsm");
 
 function showPopup(menu, x, y) {
   var hDocument = Services.appShell.hiddenDOMWindow.document;
   var frame = hDocument.createElement("iframe");
+
   frame.addEventListener("load", function frameload() {
+
     function redispatch(evt) {
       let node = evt.originalTarget;
       node = menu.ownerDocument.getElementById(node.id);
@@ -31,18 +33,22 @@ function showPopup(menu, x, y) {
       evt.stopPropagation();
       return;
     }
+
     frame.removeEventListener("load", frameload, true);
     var window = frame.contentWindow;
     var document = window.document;
-    var clonedMenu = menu.cloneNode(true);
+    var clonedMenu = menu.cloneNode(true); // deep copy
     document.importNode(clonedMenu);
     document.documentElement.appendChild(clonedMenu);
+
     clonedMenu.addEventListener("popuphidden", function hidden() {
       frame.parentNode.removeChild(frame);
       clonedMenu.removeEventListener("popuphidden", hidden, false);
     }, false);
     clonedMenu.addEventListener("command", redispatch, true);
     clonedMenu.addEventListener("click", redispatch, true);
+
+    /*
     clonedMenu.showPopup(
       document.documentElement,
       x,
@@ -51,8 +57,26 @@ function showPopup(menu, x, y) {
       "",
       "bottomleft"
     );
+    */
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/menupopup#m-showPopup
+    // showPopup( element, x, y, popupType, anchor, align ) Deprecated since Gecko 1.9
+    // openPopup( anchor , position , x , y , isContextMenu, attributesOverride, triggerEvent )
+    /*menu.openPopup(
+        null,
+        "bottomleft",
+        x, y,
+        true,
+        false
+    );*/
+    // Try better positioning of the menu
+    menu.openPopupAtScreen(x, y, true);
+
   }, true);
-  frame.setAttribute("src", "chrome://mintrayr/content/hidden.xul");
+
+  var localS = '<?xml version="1.0"?>\
+    <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"></window>';
+  frame.src = "data:text/html;charset=utf-8," + escape(localS);
+  //frame.setAttribute("src", "chrome://mintrayr/content/hidden.xul");
   hDocument.documentElement.appendChild(frame);
 }
 
@@ -143,6 +167,10 @@ MinTrayR.prototype = {
       this._icon.close();
     }
   },
+  get icon() {
+    this._ensureIcon();
+    return this._icon;
+  },
   minimize: function MinTrayR_minimize() {
     this.icon.minimize();
   },
@@ -151,6 +179,9 @@ MinTrayR.prototype = {
     if (icon && !icon.isClosed) {
       icon.restore();
     }
+  },
+  get isWatched() {
+      return this._watched;
   },
   watch: function MinTrayR_watch() {
     if (!this._watched) {
@@ -193,7 +224,7 @@ MinTrayR.prototype = {
         rv.push(node);
       }
       catch (ex) {
-        Cu.reportError("Failed to clone " + id);
+        ChromeUtils.reportError("Failed to clone " + id);
       }
     }
     return rv;
@@ -212,7 +243,7 @@ MinTrayR.prototype = {
       return [node];
     }
     catch (ex) {
-      Cu.reportError("Failed to create node");
+      ChromeUtils.reportError("Failed to create node");
     }
     return [];
   },
@@ -243,7 +274,7 @@ MinTrayR.prototype = {
         }
       }
       catch (ex) {
-        Cu.reportError(ex);
+        ChromeUtils.reportError(ex);
       }
       return;
     }
@@ -260,4 +291,4 @@ MinTrayR.prototype = {
     TrayService.unwatchMinimize(window);
   }
 };
-Cu.import('resource://mintrayr/preferences.jsm', MinTrayR.prototype.prefs);
+ChromeUtils.import('resource://mintrayr/preferences.jsm', MinTrayR.prototype.prefs);

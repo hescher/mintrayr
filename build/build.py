@@ -5,7 +5,7 @@ from io import BytesIO
 from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED, ZIP_STORED
 
 try:
-    from path import path
+    from path import Path
 except ImportError:
     print "Install path.py (via pip)"
     sys.exit(1)
@@ -44,7 +44,7 @@ def zip_files(zp, file_list, basedir):
         for fe in basedir.glob(f):
             if fe.isdir():
                 continue
-            oe = path(fe.replace("\\", "/"))[len(basedir):]
+            oe = Path(fe.replace("\\", "/"))[len(basedir):]
             with open(fe, "rb") as fp:
                 zp.writestr(ZipOutInfo(oe), fp.read())
 
@@ -57,11 +57,11 @@ def chromejar_line(line):
     return " ".join(pieces)
 
 def build(basedir, outfile):
-    basedir = path(basedir)
+    basedir = Path(basedir)
     if not basedir.endswith("/"):
         basedir += "/"
-    jar_files = (path(__file__).dirname() / "jar.files").lines(retain=False)
-    xpi_files = (path(__file__).dirname() / "xpi.files").lines(retain=False)
+    jar_files = (Path(__file__).dirname() / "jar.files").lines(retain=False)
+    xpi_files = (Path(__file__).dirname() / "xpi.files").lines(retain=False)
 
     print "verifying locales"
     try:

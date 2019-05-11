@@ -5,11 +5,12 @@
 "use strict";
 var EXPORTED_SYMBOLS = ["TrayService"];
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const {classes: Cc, interfaces: Ci} = Components;
 
-Cu.import("resource://gre/modules/ctypes.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/ctypes.jsm");
+ChromeUtils.import("resource://gre/modules/Services.jsm");
+ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 
 Services = Object.create(Services);
 XPCOMUtils.defineLazyServiceGetter(
@@ -31,13 +32,83 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIAppStartup"
   );
 
+function fixPath(path) {
+    // Handle URIs with spaces encoded with '%20'
+    try {
+        path = decodeURIComponent(path);
+    } catch (e) {
+        console.log("mintrayr: decodeURIComponent failed on: ", path);
+    }
+
+    // fix path for windows
+    // detect if this is broken windows path: '\C:\xxx'
+    // or a network path: '\\network\drive\'
+    if (/^\/[A-Z]:\//.test(path) || /^\/{3}/.test(path)) {
+        path = path.substring(1, path.length); // remove leading slash
+        path = path.replace(/\//g, '\\'); // also convert slash to backslash
+    }
+    return path;
+}
+
 const _directory = (function() {
-  let u = Services.io.newURI(Components.stack.filename, null, null);
-  u = Services.io.newURI(Services.res.resolveURI(u), null, null);
-  if (u instanceof Ci.nsIFileURL) {
-    return u.file.parent.parent;
-  }
-  throw new Error("not resolved");
+    // nsIFile
+    // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIFile
+    // spec: "resource://mintrayr/trayservice.jsm"
+    // filePath:"/trayservice.jsm"
+    let uri = Services.io.newURI(Components.stack.filename, null, null);
+    // jar:file:///home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi!/modules/trayservice.jsm
+    // jar:file:///C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi!/modules/trayservice.jsm
+    uri = Services.res.resolveURI(uri);
+    // 11: remove 'jar:file://'
+    let without_prefix = uri.substring(11, uri.length);
+    // Get only the uri of the xpi
+    // Array [ "/home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx.xpi", "/modules/trayservice.jsm" ]
+    let path = without_prefix.split('!');
+    var originalPath = fixPath(path[0]);
+    console.log("mintrayr - extension path: ", originalPath);
+    // Get future path where to put native libraries: remove '.xpi'
+    // /home/xxx/.thunderbird/xxx.default/extensions/mintrayr@tn123.ath.cx
+    // /C:/Users/xxx/AppData/Roaming/Thunderbird/Profiles/xxx.default/extensions/mintrayr@tn123.ath.cx
+    //let folderPath = originalPath.substring(0, originalPath.length-4);
+    let folderPath = originalPath.replace('.xpi', '');
+    console.log("mintrayr - extraction path: ", folderPath);
+
+    var libFolder = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    var zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+
+    // Init the directory
+    libFolder.initWithPath(folderPath);
+    try{libFolder.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o755);}
+    catch(e){
+        if (e.name != 'NS_ERROR_FILE_ALREADY_EXISTS')
+            console.log("mintrayr - create extraction dir error: ", e);
+    }
+
+    // Open the addon and extract the libraries to the directory
+    var addonFile = new FileUtils.File(originalPath);
+    // console.log(addonFile);
+    zipReader.open(addonFile);
+    // Get only lib files
+    var contentEnumerator = zipReader.findEntries("lib/*");
+    while (contentEnumerator.hasMore()) {
+        let fullPath = libFolder.clone();
+        var entryName = contentEnumerator.getNext();
+        // console.log(entryName);
+        // Get filename
+        var entryPath = entryName.split('/');
+        let length = entryPath.length;
+        if (length != 0 && entryPath[length-1] != "") {
+            // Forge full path for extracted file, and extract it
+            fullPath.append(entryPath[length-1]);
+            if (!fullPath.exists()) {
+                zipReader.extract(entryName, fullPath);
+            }
+        }
+    }
+    zipReader.close();
+
+    // Return the directory
+    return libFolder;
 })();
 
 const _libraries = {
@@ -47,11 +118,11 @@ const _libraries = {
   "x86_64-gcc3": {m:"tray_x86_64-gcc3.so",c:ctypes.char.ptr}
 };
 function loadLibrary({m,c}) {
+  // console.log("DLL name:", m);
   let resource = _directory.clone();
-  resource.append("lib");
   resource.append(m);
   if (!resource.exists()) {
-    throw new Error("XPCOMABI Library: " + resource.path)
+    throw new Error("mintrayr - XPCOMABI Library not found: " + resource.path)
   }
   return [ctypes.open(resource.path), c];
 }
@@ -99,16 +170,19 @@ var traylib;
 var char_ptr_t;
 try {
   // Try to load the library according to XPCOMABI
+  // Linux: x86_64-gcc3
   [traylib, char_ptr_t] = loadLibrary(_libraries[Services.appinfo.XPCOMABI]);
 }
 catch (ex) {
+  console.log("mintrayr - XPCOMABI:", Services.appinfo.XPCOMABI, "DLL error:", ex);
   // XPCOMABI yielded wrong results; try alternative libraries
-  for (let [,l] in Iterator(_libraries)) {
+  for (let [,l] of Object.entries(_libraries)) {
     try {
       [traylib, char_ptr_t] = loadLibrary(l);
     }
     catch (ex) {
       // no op
+      //console.log(ex);
     }
   }
   if (!traylib) {
@@ -209,7 +283,7 @@ function ptrcmp(p1, p2) {
 const mouseevent_callback = mouseevent_callback_t(function mouseevent_callback(handle, event) {
   try {
     event = event.contents;
-    for (let [,w] in Iterator(_icons)) {
+    for (let [,w] of Object.entries(_icons)) {
       if (!ptrcmp(w.handle, handle)) {
         continue;
       }
@@ -251,7 +325,7 @@ const mouseevent_callback = mouseevent_callback_t(function mouseevent_callback(h
 
 const minimize_callback = minimize_callback_t(function minimize_callback(handle, type) {
   try {
-    for (let [,w] in Iterator(_watchedWindows)) {
+    for (let [,w] of Object.entries(_watchedWindows)) {
       if (ptrcmp(w.handle, handle)) {
         if (!type) {
           TrayService.minimize(w.window, true);
@@ -342,11 +416,20 @@ TrayIcon.prototype = {
     _MinimizeWindow(this._handle);
     this._minimized = true;
   },
-  restore: function() {
+  restore: function(origin_call) {
     if (this._closed) {
       return;
     }
     if (!this._minimized) {
+        if (origin_call === undefined) {
+            // console.log("Call from trayicon only");
+            // If TrayIcon is clicked, restore() is triggered without argument
+            // also, restore() is called with the name of the calling function.
+            // we do that distinction because when the TrayIcon is created/TB launched,
+            // minimize_callback is triggered automatically. So it triggers unwanted minimization.
+            // Minimize this window
+            this.minimize();
+        }
       return;
     }
     if (this.closeOnRestore) {
@@ -380,7 +463,7 @@ TrayIcon.prototype = {
 
 var TrayService = {
   getIcon: function(window) {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       if (icon.window === window) {
         return icon;
       }
@@ -397,8 +480,8 @@ var TrayService = {
     return icon;
   },
   restoreAll: function() {
-    for (let [,icon] in Iterator(_icons.slice(0))) {
-      icon.restore();
+    for (let [,icon] of Object.entries(_icons.slice(0))) {
+      icon.restore("TrayService::restoreAll");
     }
   },
   watchMinimize: function(window) {
@@ -409,7 +492,7 @@ var TrayService = {
     _watchedWindows.push(ww);
   },
   unwatchMinimize: function(window) {
-    for (let [i,w] in Iterator(_watchedWindows)) {
+    for (let [i,w] of Object.entries(_watchedWindows)) {
       if (w.window === window) {
         try {
           w.destroy();
@@ -422,7 +505,7 @@ var TrayService = {
     }
   },
   isWatchedWindow: function(window) {
-    for (let [i,w] in Iterator(_watchedWindows)) {
+    for (let [i,w] of Object.entries(_watchedWindows)) {
       if (w.window === window) {
         return true;
       }
@@ -433,9 +516,9 @@ var TrayService = {
     return this.createIcon(window, aCloseOnRestore).minimize();
   },
   restore: function(window) {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       if (icon.window === window) {
-        icon.restore();
+        icon.restore("TrayService::restore");
         return;
       }
     }
@@ -457,12 +540,12 @@ var TrayService = {
     catch (ex) {}
   },
   _shutdown: function() {
-    for (let [,icon] in Iterator(_icons)) {
+    for (let [,icon] of Object.entries(_icons)) {
       icon.close();
     }
     _icons.length = 0;
 
-    for (let [,w] in Iterator(_watchedWindows)) {
+    for (let [,w] of Object.entries(_watchedWindows)) {
       w.destroy();
     }
     _watchedWindows.length = 0;
