@@ -11,3 +11,4 @@
 <!ENTITY mintrayr.prefs.watchwindows "ウィンドウを監視">
 <!ENTITY mintrayr.prefs.misc "その他">
 <!ENTITY mintrayr.prefs.clickbehavior "クリック時の動作">
+<!ENTITY mintrayr.prefs.showalways "常に表示する">

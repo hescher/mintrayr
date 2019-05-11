@@ -11,7 +11,7 @@ addEventListener(
     }
     removeEventListener("load", arguments.callee, true);
 
-    Components.utils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
+    ChromeUtils.import("resource://mintrayr/mintrayr.jsm", gMinTrayR);
     gMinTrayR = new gMinTrayR.MinTrayR(
       document.getElementById('MinTrayR_context'),
       "messenger.watchmessenger",
@@ -41,6 +41,9 @@ addEventListener(
               event.stopPropagation();
               return false;
             }
+            if (event.type == "close") {
+              return true;
+            }
             // must be in sync with the original command
             return goQuitApplication();
           }
@@ -54,6 +57,15 @@ addEventListener(
               }
               // must be in sync with the original command
               return window.minimize();
+          }
+          function MinTrayRKeyDown(event) {
+            // metakey => MacOS (command), Windows
+            if (event.metaKey) {
+                // Y key
+                if (event.which == 89) {
+                    MinTrayRTryMinimizeWindow(event);
+                }
+            }
           }
 
           function hijackButton(newCommand, id) {
@@ -72,6 +84,8 @@ addEventListener(
           }
           ['titlebar-close'].forEach(hijackButton.bind(null, MinTrayRTryCloseWindow));
           ['titlebar-min'].forEach(hijackButton.bind(null, MinTrayRTryMinimizeWindow));
+          window.addEventListener("close", MinTrayRTryCloseWindow);
+          window.addEventListener("keydown", MinTrayRKeyDown);
         })(this);
 
         this.cloneToMenu('MinTrayR_sep-top', [menu_NewPopup_id, "button-getAllNewMsg", "addressBook"], false);
